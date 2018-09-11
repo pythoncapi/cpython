@@ -78,9 +78,8 @@ static PyObject *
 Xxo_getattro(XxoObject *self, PyObject *name)
 {
     if (self->x_attr != NULL) {
-        PyObject *v = PyDict_GetItem(self->x_attr, name);
+        PyObject *v = PyDict_GetItemRef(self->x_attr, name);
         if (v != NULL) {
-            Py_INCREF(v);
             return v;
         }
     }

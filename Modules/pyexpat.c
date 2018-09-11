@@ -239,14 +239,13 @@ string_intern(xmlparseobject *self, const char* str)
         return result;
     if (!self->intern)
         return result;
-    value = PyDict_GetItem(self->intern, result);
+    value = PyDict_GetItemRef(self->intern, result);
     if (!value) {
         if (PyDict_SetItem(self->intern, result, result) == 0)
             return result;
         else
             return NULL;
     }
-    Py_INCREF(value);
     Py_DECREF(result);
     return value;
 }
@@ -1699,7 +1698,7 @@ MODULE_INITFUNC(void)
         Py_DECREF(m);
         return NULL;
     }
-    errors_module = PyDict_GetItem(d, errmod_name);
+    errors_module = PyDict_GetItemRef(d, errmod_name);
     if (errors_module == NULL) {
         errors_module = PyModule_New(MODULE_NAME ".errors");
         if (errors_module != NULL) {
@@ -1707,9 +1706,11 @@ MODULE_INITFUNC(void)
             /* gives away the reference to errors_module */
             PyModule_AddObject(m, "errors", errors_module);
         }
+    } else {
+        Py_DECREF(errors_module);
     }
     Py_DECREF(errmod_name);
-    model_module = PyDict_GetItem(d, modelmod_name);
+    model_module = PyDict_GetItemRef(d, modelmod_name);
     if (model_module == NULL) {
         model_module = PyModule_New(MODULE_NAME ".model");
         if (model_module != NULL) {
@@ -1717,6 +1718,8 @@ MODULE_INITFUNC(void)
             /* gives away the reference to model_module */
             PyModule_AddObject(m, "model", model_module);
         }
+    } else {
+        Py_XDECREF(model_module);
     }
     Py_DECREF(modelmod_name);
     if (errors_module == NULL || model_module == NULL) {

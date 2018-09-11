@@ -777,9 +777,13 @@ local_clear(localobject *self)
         for(tstate = PyInterpreterState_ThreadHead(tstate->interp);
             tstate;
             tstate = PyThreadState_Next(tstate))
-            if (tstate->dict &&
-                PyDict_GetItem(tstate->dict, self->key))
-                PyDict_DelItem(tstate->dict, self->key);
+            if (tstate->dict) {
+                PyObject *existing = PyDict_GetItemRef(tstate->dict, self->key);
+                if (existing) {
+                    Py_DECREF(existing);
+                    PyDict_DelItem(tstate->dict, self->key);
+                }
+            }
     }
     return 0;
 }
@@ -812,7 +816,7 @@ _ldict(localobject *self)
         return NULL;
     }
 
-    dummy = PyDict_GetItem(tdict, self->key);
+    dummy = PyDict_GetItemRef(tdict, self->key);
     if (dummy == NULL) {
         ldict = _local_create_dummy(self);
         if (ldict == NULL)
@@ -831,6 +835,7 @@ _ldict(localobject *self)
     else {
         assert(Py_TYPE(dummy) == &localdummytype);
         ldict = ((localdummyobject *) dummy)->localdict;
+        Py_DECREF(dummy);
     }
 
     return ldict;
@@ -929,13 +934,12 @@ local_getattro(localobject *self, PyObject *name)
             (PyObject *)self, name, ldict, 0);
 
     /* Optimization: just look in dict ourselves */
-    value = PyDict_GetItem(ldict, name);
+    value = PyDict_GetItemRef(ldict, name);
     if (value == NULL)
         /* Fall back on generic to get __class__ and __dict__ */
         return _PyObject_GenericGetAttrWithDict(
             (PyObject *)self, name, ldict, 0);
 
-    Py_INCREF(value);
     return value;
 }
 
@@ -956,9 +960,10 @@ _localdummy_destroyed(PyObject *localweakref, PyObject *dummyweakref)
     self = (localobject *) obj;
     if (self->dummies != NULL) {
         PyObject *ldict;
-        ldict = PyDict_GetItem(self->dummies, dummyweakref);
+        ldict = PyDict_GetItemRef(self->dummies, dummyweakref);
         if (ldict != NULL) {
             PyDict_DelItem(self->dummies, dummyweakref);
+            Py_DECREF(ldict);
         }
         if (PyErr_Occurred())
             PyErr_WriteUnraisable(obj);

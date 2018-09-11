@@ -142,14 +142,14 @@ _ctypes_get_errobj(int **pspace)
         if (error_object_name == NULL)
             return NULL;
     }
-    errobj = PyDict_GetItem(dict, error_object_name);
+    errobj = PyDict_GetItemRef(dict, error_object_name);
     if (errobj) {
         if (!PyCapsule_IsValid(errobj, CTYPES_CAPSULE_NAME_PYMEM)) {
+            Py_DECREF(errobj);
             PyErr_SetString(PyExc_RuntimeError,
                 "ctypes.error_object is an invalid capsule");
             return NULL;
         }
-        Py_INCREF(errobj);
     }
     else {
         void *space = PyMem_Malloc(sizeof(int) * 2);
@@ -1676,9 +1676,8 @@ POINTER(PyObject *self, PyObject *cls)
     PyObject *key;
     char *buf;
 
-    result = PyDict_GetItem(_ctypes_ptrtype_cache, cls);
+    result = PyDict_GetItemRef(_ctypes_ptrtype_cache, cls);
     if (result) {
-        Py_INCREF(result);
         return result;
     }
     if (PyUnicode_CheckExact(cls)) {
@@ -1741,10 +1740,12 @@ pointer(PyObject *self, PyObject *arg)
     PyObject *typ;
 
     PyTypeObject *arg_type = Py_GetType(arg);
-    typ = PyDict_GetItem(_ctypes_ptrtype_cache, (PyObject *)arg_type);
+    typ = PyDict_GetItemRef(_ctypes_ptrtype_cache, (PyObject *)arg_type);
     if (typ) {
         Py_DECREF(arg_type);
-        return PyObject_CallFunctionObjArgs(typ, arg, NULL);
+        result = PyObject_CallFunctionObjArgs(typ, arg, NULL);
+        Py_DECREF(typ);
+        return result;
     }
     typ = POINTER(NULL, (PyObject *)arg_type);
     Py_DECREF(arg_type);

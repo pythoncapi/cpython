@@ -86,10 +86,11 @@ pysqlite_microprotocols_adapt(PyObject *obj, PyObject *proto, PyObject *alt)
     if (!key) {
         return NULL;
     }
-    adapter = PyDict_GetItem(psyco_adapters, key);
+    adapter = PyDict_GetItemRef(psyco_adapters, key);
     Py_DECREF(key);
     if (adapter) {
         PyObject *adapted = PyObject_CallFunctionObjArgs(adapter, obj, NULL);
+        Py_DECREF(adapter);
         return adapted;
     }
 

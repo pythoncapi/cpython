@@ -497,12 +497,14 @@ select_poll_modify_impl(pollObject *self, int fd, unsigned short eventmask)
     key = PyLong_FromLong(fd);
     if (key == NULL)
         return NULL;
-    if (PyDict_GetItem(self->dict, key) == NULL) {
+    PyObject *e = PyDict_GetItemRef(self->dict, key);
+    if (e == NULL) {
         errno = ENOENT;
         PyErr_SetFromErrno(PyExc_OSError);
         Py_DECREF(key);
         return NULL;
     }
+    Py_DECREF(e);
     value = PyLong_FromLong(eventmask);
     if (value == NULL) {
         Py_DECREF(key);
