@@ -806,7 +806,7 @@ extern _invalid_parameter_handler _Py_silent_invalid_parameter_handler;
  *
  *   Py_NEWCAPI_BORROWED_REF: declare functions/macros using
  *      borrowed references -- enabled by Py_NEWCAPI_NO_MACRO
- *      and Py_NEWCAPI_NO_STRUCT.
+ *      and Py_NEWCAPI_NO_STRUCT, but not by Py_NEWCAPI.
  */
 
 #if defined(Py_NEWCAPI)

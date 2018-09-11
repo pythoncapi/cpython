@@ -20,7 +20,25 @@ Build and run unit tests::
 
 If you want to help, look at ``TODO.rst``.
 
-The changes live in the **pythoncapi** branch. See also:
+The changes live in the **pythoncapi** branch.
+
+New C API defines:
+
+* ``Py_NEWCAPI_NO_MACRO``: replace macros with function calls
+  ``PyTuple_GET_SIZE()`` becomes ``PyTuple_Size()``
+* ``Py_NEWCAPI_NO_STRUCT``: must not use ``PyObject.ob_refcnt`` or any other
+  field of Python object structures; structures should hide their fields:
+  compilation error.
+* ``Py_NEWCAPI``: new C API without borrowed references, without macro,
+  without struct
+
+Related defines:
+
+* ``Py_NEWCAPI_BORROWED_REF``: declare functions/macros using
+  borrowed references -- enabled by ``Py_NEWCAPI_NO_MACRO``
+  and ``Py_NEWCAPI_NO_STRUCT``, but not by ``Py_NEWCAPI``.
+
+See also:
 
 * `github.com/pythoncapi/cpython <https://github.com/pythoncapi/cpython>`_
 * `capi-sig mailing list
