@@ -583,7 +583,7 @@ fill_and_set_sslerror(PySSLSocket *sslsock, PyObject *type, int ssl_errno,
         key = Py_BuildValue("ii", lib, reason);
         if (key == NULL)
             goto fail;
-        reason_obj = PyDict_GetItem(err_codes_to_names, key);
+        reason_obj = PyDict_GetItemRef(err_codes_to_names, key);
         Py_DECREF(key);
         if (reason_obj == NULL) {
             /* XXX if reason < 100, it might reflect a library number (!!) */
@@ -592,7 +592,7 @@ fill_and_set_sslerror(PySSLSocket *sslsock, PyObject *type, int ssl_errno,
         key = PyLong_FromLong(lib);
         if (key == NULL)
             goto fail;
-        lib_obj = PyDict_GetItem(lib_codes_to_names, key);
+        lib_obj = PyDict_GetItemRef(lib_codes_to_names, key);
         Py_DECREF(key);
         if (lib_obj == NULL) {
             PyErr_Clear();
@@ -671,13 +671,17 @@ fill_and_set_sslerror(PySSLSocket *sslsock, PyObject *type, int ssl_errno,
     if (err_value == NULL)
         goto fail;
 
-    if (reason_obj == NULL)
+    if (!reason_obj) {
         reason_obj = Py_None;
+        Py_INCREF(reason_obj);
+    }
     if (_PyObject_SetAttrId(err_value, &PyId_reason, reason_obj))
         goto fail;
 
-    if (lib_obj == NULL)
+    if (!lib_obj) {
         lib_obj = Py_None;
+        Py_INCREF(lib_obj);
+    }
     if (_PyObject_SetAttrId(err_value, &PyId_library, lib_obj))
         goto fail;
 
@@ -692,6 +696,8 @@ fill_and_set_sslerror(PySSLSocket *sslsock, PyObject *type, int ssl_errno,
 
     PyErr_SetObject(type, err_value);
 fail:
+    Py_XDECREF(reason_obj);
+    Py_XDECREF(lib_obj);
     Py_XDECREF(err_value);
     Py_XDECREF(verify_code_obj);
     Py_XDECREF(verify_obj);
@@ -5432,7 +5438,7 @@ _ssl_enum_crls_impl(PyObject *module, const char *store_name)
             break;
         }
         PyTuple_SetItemRef(tup, 0, crl);
-        Py_CLEAR(crl;
+        Py_CLEAR(crl);
         PyTuple_SetItemRef(tup, 1, enc);
         Py_CLEAR(enc);
 

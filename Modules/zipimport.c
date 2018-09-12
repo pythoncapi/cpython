@@ -154,7 +154,7 @@ zipimport_zipimporter___init___impl(ZipImporter *self, PyObject *path)
     if (PyUnicode_READY(filename) < 0)
         goto error;
 
-    files = PyDict_GetItem(zip_directory_cache, filename);
+    files = PyDict_GetItemRef(zip_directory_cache, filename);
     if (files == NULL) {
         files = read_directory(filename);
         if (files == NULL)
@@ -162,8 +162,6 @@ zipimport_zipimporter___init___impl(ZipImporter *self, PyObject *path)
         if (PyDict_SetItem(zip_directory_cache, filename, files) != 0)
             goto error;
     }
-    else
-        Py_INCREF(files);
     Py_XSETREF(self->files, files);
 
     /* Transfer reference */
@@ -343,9 +341,10 @@ get_module_info(ZipImporter *self, PyObject *fullname)
             Py_DECREF(path);
             return MI_ERROR;
         }
-        item = PyDict_GetItem(self->files, fullpath);
+        item = PyDict_GetItemRef(self->files, fullpath);
         Py_DECREF(fullpath);
         if (item != NULL) {
+            Py_DECREF(item);
             Py_DECREF(path);
             if (zso->type & IS_PACKAGE)
                 return MI_PACKAGE;
@@ -687,7 +686,7 @@ zipimport_zipimporter_get_data_impl(ZipImporter *self, PyObject *path)
     key = PyUnicode_Substring(path, path_start, path_len);
     if (key == NULL)
         goto error;
-    toc_entry = PyDict_GetItem(self->files, key);
+    toc_entry = PyDict_GetItemRef(self->files, key);
     if (toc_entry == NULL) {
         PyErr_SetFromErrnoWithFilenameObject(PyExc_OSError, key);
         Py_DECREF(key);
@@ -695,7 +694,9 @@ zipimport_zipimporter_get_data_impl(ZipImporter *self, PyObject *path)
     }
     Py_DECREF(key);
     Py_DECREF(path);
-    return get_data(self->archive, toc_entry);
+    PyObject *data = get_data(self->archive, toc_entry);
+    Py_DECREF(toc_entry);
+    return data;
   error:
     Py_DECREF(path);
     return NULL;
@@ -766,11 +767,12 @@ zipimport_zipimporter_get_source_impl(ZipImporter *self, PyObject *fullname)
     if (fullpath == NULL)
         return NULL;
 
-    toc_entry = PyDict_GetItem(self->files, fullpath);
+    toc_entry = PyDict_GetItemRef(self->files, fullpath);
     Py_DECREF(fullpath);
     if (toc_entry != NULL) {
         PyObject *res, *bytes;
         bytes = get_data(self->archive, toc_entry);
+        Py_DECREF(toc_entry);
         if (bytes == NULL)
             return NULL;
         res = PyUnicode_FromStringAndSize(PyBytes_AS_STRING(bytes),
@@ -1482,7 +1484,7 @@ get_mtime_of_source(ZipImporter *self, PyObject *path)
     if (stripped == NULL)
         return (time_t)-1;
 
-    toc_entry = PyDict_GetItem(self->files, stripped);
+    toc_entry = PyDict_GetItemRef(self->files, stripped);
     Py_DECREF(stripped);
     if (toc_entry != NULL && PyTuple_Check(toc_entry) &&
         PyTuple_Size(toc_entry) == 8) {
@@ -1494,6 +1496,7 @@ get_mtime_of_source(ZipImporter *self, PyObject *path)
         mtime = parse_dostime(time, date);
     } else
         mtime = 0;
+    Py_XDECREF(toc_entry);
     return mtime;
 }
 
@@ -1553,7 +1556,7 @@ get_module_code(ZipImporter *self, PyObject *fullname,
         if (Py_VerboseFlag > 1)
             PySys_FormatStderr("# trying %U%c%U\n",
                                self->archive, (int)SEP, fullpath);
-        toc_entry = PyDict_GetItem(self->files, fullpath);
+        toc_entry = PyDict_GetItemRef(self->files, fullpath);
         if (toc_entry != NULL) {
             time_t mtime = 0;
             int ispackage = zso->type & IS_PACKAGE;
@@ -1562,6 +1565,7 @@ get_module_code(ZipImporter *self, PyObject *fullname,
             if (isbytecode) {
                 mtime = get_mtime_of_source(self, fullpath);
                 if (mtime == (time_t)-1 && PyErr_Occurred()) {
+                    Py_DECREF(toc_entry);
                     goto exit;
                 }
             }
@@ -1574,6 +1578,7 @@ get_module_code(ZipImporter *self, PyObject *fullname,
             if (code == Py_None) {
                 /* bad magic number or non-matching mtime
                    in byte code, try next */
+                Py_DECREF(toc_entry);
                 Py_DECREF(code);
                 continue;
             }
@@ -1581,6 +1586,7 @@ get_module_code(ZipImporter *self, PyObject *fullname,
                 *p_modpath = PyTuple_GetItem(toc_entry, 0);
                 Py_INCREF(*p_modpath);
             }
+            Py_DECREF(toc_entry);
             goto exit;
         }
         else

@@ -238,15 +238,19 @@ PyObject *
 PyDict_GetItemProxy(PyObject *dict, PyObject *key)
 {
     PyObject *result;
-    PyObject *item = PyDict_GetItem(dict, key);
+    PyObject *item = PyDict_GetItemRef(dict, key);
 
     if (item == NULL)
         return NULL;
-    if (!PyWeakref_CheckProxy(item))
-        return item;
-    result = PyWeakref_GET_OBJECT(item);
-    if (result == Py_None)
-        return NULL;
+    if (!PyWeakref_CheckProxy(item)) {
+        result = item;
+    } else {
+        result = PyWeakref_GET_OBJECT(item);
+        if (result == Py_None) 
+            result = NULL;
+    }
+
+    Py_DECREF(item);
     return result;
 }
 
@@ -3620,9 +3624,8 @@ _get_arg(int *pindex, PyObject *name, PyObject *defval, PyObject *inargs, PyObje
         ++*pindex;
         return v;
     }
-    if (kwds && name && (v = PyDict_GetItem(kwds, name))) {
+    if (kwds && name && (v = PyDict_GetItemRef(kwds, name))) {
         ++*pindex;
-        Py_INCREF(v);
         return v;
     }
     if (defval) {
@@ -4197,13 +4200,17 @@ _init_pos_args(PyObject *self, PyTypeObject *type,
         }
         val = PyTuple_GetItemRef(args, i + index);
         Py_DECREF(val);
-        if (kwds && PyDict_GetItem(kwds, name)) {
-            PyErr_Format(PyExc_TypeError,
-                         "duplicate values for field %R",
-                         name);
-            Py_DECREF(pair);
-            Py_DECREF(name);
-            return -1;
+        if (kwds) {
+            PyObject *existing = PyDict_GetItemRef(kwds, name);
+            if (existing) {
+                PyErr_Format(PyExc_TypeError,
+                            "duplicate values for field %R",
+                            name);
+                Py_DECREF(existing);
+                Py_DECREF(pair);
+                Py_DECREF(name);
+                return -1;
+            }
         }
 
         res = PyObject_SetAttr(self, name, val);

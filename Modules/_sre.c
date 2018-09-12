@@ -1953,10 +1953,11 @@ match_getindex(MatchObject* self, PyObject* index)
     i = -1;
 
     if (self->pattern->groupindex) {
-        index = PyDict_GetItem(self->pattern->groupindex, index);
+        index = PyDict_GetItemRef(self->pattern->groupindex, index);
         if (index && PyLong_Check(index)) {
             i = PyLong_AsSsize_t(index);
         }
+        Py_XDECREF(index);
     }
 
     return i;

@@ -1331,6 +1331,14 @@ PyDict_GetItem(PyObject *op, PyObject *key)
     return value;
 }
 
+PyObject *
+PyDict_GetItemRef(PyObject *op, PyObject *key)
+{
+    PyObject* value = PyDict_GetItem(op, key);
+    Py_XINCREF(value);
+    return value;
+}
+
 /* Same as PyDict_GetItemWithError() but with hash supplied by caller.
    This returns NULL *with* an exception set if an exception occurred.
    It returns NULL *without* an exception set if the key wasn't present.
@@ -3265,6 +3273,14 @@ PyDict_GetItemString(PyObject *v, const char *key)
     rv = PyDict_GetItem(v, kv);
     Py_DECREF(kv);
     return rv;
+}
+
+PyObject *
+PyDict_GetItemRefString(PyObject *v, const char *key)
+{
+    PyObject *value = PyDict_GetItemString(v, key);
+    Py_XINCREF(value);
+    return value;
 }
 
 int

@@ -132,13 +132,11 @@ get_dialect_from_registry(PyObject * name_obj)
 {
     PyObject *dialect_obj;
 
-    dialect_obj = PyDict_GetItem(_csvstate_global->dialects, name_obj);
+    dialect_obj = PyDict_GetItemRef(_csvstate_global->dialects, name_obj);
     if (dialect_obj == NULL) {
         if (!PyErr_Occurred())
             PyErr_Format(_csvstate_global->error_obj, "unknown dialect");
     }
-    else
-        Py_INCREF(dialect_obj);
     return dialect_obj;
 }
 

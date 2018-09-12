@@ -98,7 +98,9 @@ EXPORTS
   PyDict_DelItem=python38.PyDict_DelItem
   PyDict_DelItemString=python38.PyDict_DelItemString
   PyDict_GetItem=python38.PyDict_GetItem
+  PyDict_GetItemRef=python38.PyDict_GetItemRef
   PyDict_GetItemString=python38.PyDict_GetItemString
+  PyDict_GetItemRefString=python38.PyDict_GetItemRefString
   PyDict_GetItemWithError=python38.PyDict_GetItemWithError
   PyDict_Items=python38.PyDict_Items
   PyDict_Keys=python38.PyDict_Keys

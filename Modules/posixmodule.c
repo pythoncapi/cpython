@@ -1409,10 +1409,12 @@ convertenviron(void)
             Py_DECREF(k);
             continue;
         }
-        if (PyDict_GetItem(d, k) == NULL) {
+        PyObject* e = PyDict_GetItemRef(d, k);
+        if (e == NULL) {
             if (PyDict_SetItem(d, k, v) != 0)
                 PyErr_Clear();
         }
+        Py_XDECREF(e);
         Py_DECREF(k);
         Py_DECREF(v);
     }
@@ -1437,10 +1439,12 @@ convertenviron(void)
             Py_DECREF(k);
             continue;
         }
-        if (PyDict_GetItem(d, k) == NULL) {
+        PyObject* e = PyDict_GetItemRef(d, k);
+        if (e == NULL) {
             if (PyDict_SetItem(d, k, v) != 0)
                 PyErr_Clear();
         }
+        Py_XDECREF(e);
         Py_DECREF(k);
         Py_DECREF(v);
     }

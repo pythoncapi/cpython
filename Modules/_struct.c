@@ -2092,9 +2092,8 @@ cache_struct_converter(PyObject *fmt, PyObject **ptr)
             return 0;
     }
 
-    s_object = PyDict_GetItem(cache, fmt);
+    s_object = PyDict_GetItemRef(cache, fmt);
     if (s_object != NULL) {
-        Py_INCREF(s_object);
         *ptr = s_object;
         return Py_CLEANUP_SUPPORTED;
     }

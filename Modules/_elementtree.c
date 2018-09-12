@@ -324,19 +324,22 @@ static PyObject*
 get_attrib_from_keywords(PyObject *kwds)
 {
     PyObject *attrib_str = PyUnicode_FromString("attrib");
-    PyObject *attrib = PyDict_GetItem(kwds, attrib_str);
+    PyObject *attrib = PyDict_GetItemRef(kwds, attrib_str);
 
     if (attrib) {
         /* If attrib was found in kwds, copy its value and remove it from
          * kwds
          */
         if (!PyDict_Check(attrib)) {
+            Py_DECREF(attrib);
             Py_DECREF(attrib_str);
             PyErr_Format(PyExc_TypeError, "attrib must be dict, not %T",
                          attrib);
             return NULL;
         }
-        attrib = PyDict_Copy(attrib);
+        PyObject *copy =  PyDict_Copy(attrib);
+        Py_DECREF(attrib);
+        attrib = copy;
         PyDict_DelItem(kwds, attrib_str);
     } else {
         attrib = PyDict_New();
@@ -1341,17 +1344,16 @@ _elementtree_Element_get_impl(ElementObject *self, PyObject *key,
                               PyObject *default_value)
 /*[clinic end generated code: output=523c614142595d75 input=ee153bbf8cdb246e]*/
 {
-    PyObject* value;
+    PyObject* value = NULL;
 
-    if (!self->extra || self->extra->attrib == Py_None)
+    if (self->extra && self->extra->attrib != Py_None)
+        value = PyDict_GetItemRef(self->extra->attrib, key);
+
+    if (!value) {
         value = default_value;
-    else {
-        value = PyDict_GetItem(self->extra->attrib, key);
-        if (!value)
-            value = default_value;
+        Py_INCREF(value);    
     }
 
-    Py_INCREF(value);
     return value;
 }
 
@@ -2790,11 +2792,9 @@ makeuniversal(XMLParserObject* self, const char* string)
     if (!key)
         return NULL;
 
-    value = PyDict_GetItem(self->names, key);
+    value = PyDict_GetItemRef(self->names, key);
 
-    if (value) {
-        Py_INCREF(value);
-    } else {
+    if (!value) {
         /* new name.  convert to universal name, and decode as
            necessary */
 
@@ -2916,7 +2916,7 @@ expat_default_handler(XMLParserObject* self, const XML_Char* data_in,
     if (!key)
         return;
 
-    value = PyDict_GetItem(self->entity, key);
+    value = PyDict_GetItemRef(self->entity, key);
 
     if (value) {
         if (TreeBuilder_CheckExact(self->target))
@@ -2927,6 +2927,7 @@ expat_default_handler(XMLParserObject* self, const XML_Char* data_in,
             res = PyObject_CallFunctionObjArgs(self->handle_data, value, NULL);
         else
             res = NULL;
+        Py_DECREF(value);
         Py_XDECREF(res);
     } else if (!PyErr_Occurred()) {
         /* Report the first error, not the last */

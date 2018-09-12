@@ -67,7 +67,12 @@ PyAPI_DATA(PyTypeObject) PyDictValues_Type;
 
 
 PyAPI_FUNC(PyObject *) PyDict_New(void);
+#ifndef Py_NEWCAPI
 PyAPI_FUNC(PyObject *) PyDict_GetItem(PyObject *mp, PyObject *key);
+PyAPI_FUNC(PyObject *) PyDict_GetItemString(PyObject *dp, const char *key);
+#endif
+PyAPI_FUNC(PyObject *) PyDict_GetItemRef(PyObject *mp, PyObject *key);
+PyAPI_FUNC(PyObject *) PyDict_GetItemRefString(PyObject *dp, const char *key);
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(PyObject *) _PyDict_GetItem_KnownHash(PyObject *mp, PyObject *key,
                                        Py_hash_t hash);
@@ -155,7 +160,6 @@ PyAPI_FUNC(int) PyDict_MergeFromSeq2(PyObject *d,
                                            PyObject *seq2,
                                            int override);
 
-PyAPI_FUNC(PyObject *) PyDict_GetItemString(PyObject *dp, const char *key);
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(PyObject *) _PyDict_GetItemId(PyObject *dp, struct _Py_Identifier *key);
 #endif /* !Py_LIMITED_API */

@@ -123,7 +123,7 @@ PyObject* pysqlite_cache_get(pysqlite_Cache* self, PyObject* args)
     pysqlite_Node* ptr;
     PyObject* data;
 
-    node = (pysqlite_Node*)PyDict_GetItem(self->mapping, key);
+    node = (pysqlite_Node*)PyDict_GetItemRef(self->mapping, key);
     if (node) {
         /* an entry for this key already exists in the cache */
 
@@ -160,6 +160,8 @@ PyObject* pysqlite_cache_get(pysqlite_Cache* self, PyObject* args)
                 self->first = node;
             }
             ptr->prev = node;
+
+            Py_DECREF(node); // linked list has a ref
         }
     } else {
         /* There is no entry for this key in the cache, yet. We'll insert a new

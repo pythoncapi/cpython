@@ -750,9 +750,8 @@ _parse_object_unicode(PyScannerObject *s, PyObject *pystr, Py_ssize_t idx, Py_ss
             key = scanstring_unicode(pystr, idx + 1, s->strict, &next_idx);
             if (key == NULL)
                 goto bail;
-            memokey = PyDict_GetItem(s->memo, key);
+            memokey = PyDict_GetItemRef(s->memo, key);
             if (memokey != NULL) {
-                Py_INCREF(memokey);
                 Py_DECREF(key);
                 key = memokey;
             }
