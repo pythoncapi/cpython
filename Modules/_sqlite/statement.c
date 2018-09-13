@@ -281,8 +281,7 @@ void pysqlite_statement_bind_parameters(pysqlite_Statement* self, PyObject* para
 
             binding_name++; /* skip first char (the colon) */
             if (PyDict_CheckExact(parameters)) {
-                current_param = PyDict_GetItemString(parameters, binding_name);
-                Py_XINCREF(current_param);
+                current_param = PyDict_GetItemRefString(parameters, binding_name);
             } else {
                 current_param = PyMapping_GetItemString(parameters, binding_name);
             }

@@ -3125,22 +3125,29 @@ dec_format(PyObject *dec, PyObject *args)
                 "optional argument must be a dict");
             goto finish;
         }
-        if ((dot = PyDict_GetItemString(override, "decimal_point"))) {
-            if ((dot = PyUnicode_AsUTF8String(dot)) == NULL) {
+        PyObject *tmp;
+        if ((dot = PyDict_GetItemRefString(override, "decimal_point"))) {
+            if ((tmp = PyUnicode_AsUTF8String(dot)) == NULL) {
                 goto finish;
             }
+            Py_DECREF(dot);
+            dot = tmp;
             spec.dot = PyBytes_AS_STRING(dot);
         }
-        if ((sep = PyDict_GetItemString(override, "thousands_sep"))) {
-            if ((sep = PyUnicode_AsUTF8String(sep)) == NULL) {
+        if ((sep = PyDict_GetItemRefString(override, "thousands_sep"))) {
+            if ((tmp = PyUnicode_AsUTF8String(sep)) == NULL) {
                 goto finish;
             }
+            Py_DECREF(sep);
+            sep = tmp;
             spec.sep = PyBytes_AS_STRING(sep);
         }
-        if ((grouping = PyDict_GetItemString(override, "grouping"))) {
-            if ((grouping = PyUnicode_AsUTF8String(grouping)) == NULL) {
+        if ((grouping = PyDict_GetItemRefString(override, "grouping"))) {
+            if ((tmp = PyUnicode_AsUTF8String(grouping)) == NULL) {
                 goto finish;
             }
+            Py_DECREF(grouping);
+            grouping = tmp;
             spec.grouping = PyBytes_AS_STRING(grouping);
         }
         if (mpd_validate_lconv(&spec) < 0) {

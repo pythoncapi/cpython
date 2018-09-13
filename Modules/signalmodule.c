@@ -1325,10 +1325,9 @@ PyInit__signal(void)
          goto finally;
 #endif
 
-    x = IntHandler = PyDict_GetItemString(d, "default_int_handler");
+    x = IntHandler = PyDict_GetItemRefString(d, "default_int_handler");
     if (!x)
         goto finally;
-    Py_INCREF(IntHandler);
 
     _Py_atomic_store_relaxed(&Handlers[0].tripped, 0);
     for (i = 1; i < NSIG; i++) {

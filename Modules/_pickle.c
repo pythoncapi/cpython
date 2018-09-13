@@ -218,10 +218,9 @@ _Pickle_InitState(PickleState *st)
     builtins = PyEval_GetBuiltins();
     if (builtins == NULL)
         goto error;
-    st->getattr = PyDict_GetItemString(builtins, "getattr");
+    st->getattr = PyDict_GetItemRefString(builtins, "getattr");
     if (st->getattr == NULL)
         goto error;
-    Py_INCREF(st->getattr);
 
     copyreg = PyImport_ImportModule("copyreg");
     if (!copyreg)
