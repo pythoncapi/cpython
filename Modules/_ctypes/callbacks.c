@@ -108,9 +108,10 @@ TryAddRef(StgDictObject *dict, CDataObject *obj)
 {
     IUnknown *punk;
 
-    if (NULL == PyDict_GetItemString((PyObject *)dict, "_needs_com_addref_"))
+    PyObject *add_ref = PyDict_GetItemRefString((PyObject *)dict, "_needs_com_addref_");
+    if (NULL == add_ref)
         return;
-
+    Py_DECREF(add_ref);
     punk = *(IUnknown **)obj->b_ptr;
     if (punk)
         punk->lpVtbl->AddRef(punk);

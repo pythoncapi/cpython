@@ -358,9 +358,11 @@ remove_unusable_flags(PyObject *m)
             break;
         }
         else {
-            if (PyDict_GetItemString(
-                    dict,
-                    win_runtime_flags[i].flag_name) != NULL) {
+            PyObject *flag = PyDict_GetItemRefString(
+                dict,
+                win_runtime_flags[i].flag_name);
+            if (flag != NULL) {
+                Py_DECREF(flag);
                 PyDict_DelItemString(
                     dict,
                     win_runtime_flags[i].flag_name);

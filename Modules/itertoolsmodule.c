@@ -4351,16 +4351,20 @@ zip_longest_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_ssize_t i;
     PyObject *ittuple;  /* tuple of iterators */
     PyObject *result;
-    PyObject *fillvalue = Py_None;
+    PyObject *fillvalue;
     Py_ssize_t tuplesize;
 
     if (kwds != NULL && PyDict_CheckExact(kwds) && PyDict_GET_SIZE(kwds) > 0) {
-        fillvalue = PyDict_GetItemString(kwds, "fillvalue");
+        fillvalue = PyDict_GetItemRefString(kwds, "fillvalue");
         if (fillvalue == NULL || PyDict_GET_SIZE(kwds) > 1) {
+            Py_XDECREF(fillvalue);
             PyErr_SetString(PyExc_TypeError,
                 "zip_longest() got an unexpected keyword argument");
             return NULL;
         }
+    } else {
+        fillvalue = Py_None;
+        Py_INCREF(fillvalue);
     }
 
     /* args must be a tuple */
@@ -4407,7 +4411,6 @@ zip_longest_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     lz->tuplesize = tuplesize;
     lz->numactive = tuplesize;
     lz->result = result;
-    Py_INCREF(fillvalue);
     lz->fillvalue = fillvalue;
     return (PyObject *)lz;
 }

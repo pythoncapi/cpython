@@ -440,8 +440,11 @@ StructUnionType_new(PyTypeObject *type, PyObject *args, PyObject *kwds, int isSt
         return NULL;
 
     /* keep this for bw compatibility */
-    if (PyDict_GetItemString(result->tp_dict, "_abstract_"))
+    PyObject *abstract = PyDict_GetItemRefString(result->tp_dict, "_abstract_");
+    if (abstract) {
+        Py_DECREF(abstract);
         return (PyObject *)result;
+    }
 
     dict = (StgDictObject *)_PyObject_CallNoArg((PyObject *)&PyCStgDict_Type);
     if (!dict) {
@@ -464,7 +467,7 @@ StructUnionType_new(PyTypeObject *type, PyObject *args, PyObject *kwds, int isSt
 
     dict->paramfunc = StructUnionType_paramfunc;
 
-    fields = PyDict_GetItemString((PyObject *)dict, "_fields_");
+    fields = PyDict_GetItemRefString((PyObject *)dict, "_fields_");
     if (!fields) {
         StgDictObject *basedict = PyType_stgdict((PyObject *)result->tp_base);
 
@@ -482,8 +485,10 @@ StructUnionType_new(PyTypeObject *type, PyObject *args, PyObject *kwds, int isSt
 
     if (-1 == PyObject_SetAttrString((PyObject *)result, "_fields_", fields)) {
         Py_DECREF(result);
+        Py_DECREF(fields);
         return NULL;
     }
+    Py_DECREF(fields);
     return (PyObject *)result;
 }
 
@@ -987,10 +992,11 @@ PyCPointerType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     stgdict->paramfunc = PyCPointerType_paramfunc;
     stgdict->flags |= TYPEFLAG_ISPOINTER;
 
-    proto = PyDict_GetItemString(typedict, "_type_"); /* Borrowed ref */
+    proto = PyDict_GetItemRefString(typedict, "_type_");
     Py_DECREF(typedict);
     if (proto && -1 == PyCPointerType_SetProto(stgdict, proto)) {
         Py_DECREF((PyObject *)stgdict);
+        Py_DECREF(proto);
         return NULL;
     }
 
@@ -1014,8 +1020,10 @@ PyCPointerType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         }
         if (stgdict->format == NULL) {
             Py_DECREF((PyObject *)stgdict);
+            Py_DECREF(proto);
             return NULL;
         }
+        Py_DECREF(proto);
     }
 
     /* create the new instance (which is a class,
@@ -2298,47 +2306,50 @@ make_funcptrtype_dict(StgDictObject *stgdict)
     stgdict->getfunc = NULL;
     stgdict->ffi_type_pointer = ffi_type_pointer;
 
-    ob = PyDict_GetItemString((PyObject *)stgdict, "_flags_");
+    ob = PyDict_GetItemRefString((PyObject *)stgdict, "_flags_");
     if (!ob || !PyLong_Check(ob)) {
+        Py_XDECREF(ob);
         PyErr_SetString(PyExc_TypeError,
             "class must define _flags_ which must be an integer");
         return -1;
     }
     stgdict->flags = PyLong_AS_LONG(ob) | TYPEFLAG_ISPOINTER;
+    Py_DECREF(ob);
 
     /* _argtypes_ is optional... */
-    ob = PyDict_GetItemString((PyObject *)stgdict, "_argtypes_");
+    ob = PyDict_GetItemRefString((PyObject *)stgdict, "_argtypes_");
     if (ob) {
         converters = converters_from_argtypes(ob);
-        if (!converters)
+        if (!converters) {
+            Py_DECREF(ob);
             goto error;
-        Py_INCREF(ob);
+        }
         stgdict->argtypes = ob;
         stgdict->converters = converters;
     }
 
-    ob = PyDict_GetItemString((PyObject *)stgdict, "_restype_");
+    ob = PyDict_GetItemRefString((PyObject *)stgdict, "_restype_");
     if (ob) {
         if (ob != Py_None && !PyType_stgdict(ob) && !PyCallable_Check(ob)) {
+            Py_DECREF(ob);
             PyErr_SetString(PyExc_TypeError,
                 "_restype_ must be a type, a callable, or None");
             return -1;
         }
-        Py_INCREF(ob);
         stgdict->restype = ob;
         stgdict->checker = PyObject_GetAttrString(ob, "_check_retval_");
         if (stgdict->checker == NULL)
             PyErr_Clear();
     }
 /* XXX later, maybe.
-    ob = PyDict_GetItemString((PyObject *)stgdict, "_errcheck_");
+    ob = PyDict_GetItemRefString((PyObject *)stgdict, "_errcheck_");
     if (ob) {
         if (!PyCallable_Check(ob)) {
             PyErr_SetString(PyExc_TypeError,
                 "_errcheck_ must be callable");
+            Py_DECREF(ob);
             return -1;
         }
-        Py_INCREF(ob);
         stgdict->errcheck = ob;
     }
 */
@@ -3546,7 +3557,11 @@ PyCFuncPtr_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
        like that.
     */
 /*
-    if (kwds && PyDict_GetItemString(kwds, "options")) {
+    if (kwds) {
+        PyObject *options = PyDict_GetItemRefString(kwds, "options");
+        if (options) {
+            Py_DECREF(options);
+        }
         ...
     }
 */
@@ -4181,7 +4196,7 @@ _init_pos_args(PyObject *self, PyTypeObject *type,
     }
 
     dict = PyType_stgdict((PyObject *)type);
-    fields = PyDict_GetItemString((PyObject *)dict, "_fields_");
+    fields = PyDict_GetItemRefString((PyObject *)dict, "_fields_");
     if (fields == NULL)
         return index;
 
@@ -4192,14 +4207,13 @@ _init_pos_args(PyObject *self, PyTypeObject *type,
         PyObject *name, *val;
         int res;
         if (!pair)
-            return -1;
+            goto error;
         name = PySequence_GetItem(pair, 0);
         if (!name) {
             Py_DECREF(pair);
-            return -1;
+            goto error;
         }
         val = PyTuple_GetItemRef(args, i + index);
-        Py_DECREF(val);
         if (kwds) {
             PyObject *existing = PyDict_GetItemRef(kwds, name);
             if (existing) {
@@ -4209,17 +4223,22 @@ _init_pos_args(PyObject *self, PyTypeObject *type,
                 Py_DECREF(existing);
                 Py_DECREF(pair);
                 Py_DECREF(name);
-                return -1;
+                Py_DECREF(val);
+                goto error;
             }
         }
 
         res = PyObject_SetAttr(self, name, val);
+        Py_DECREF(val);
         Py_DECREF(pair);
         Py_DECREF(name);
         if (res == -1)
-            return -1;
+            goto error;
     }
     return index + dict->length;
+error:
+    Py_DECREF(fields);
+    return -1;
 }
 
 static int
