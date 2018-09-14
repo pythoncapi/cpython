@@ -5609,7 +5609,7 @@ parse_openssl_version(unsigned long libver,
 PyMODINIT_FUNC
 PyInit__ssl(void)
 {
-    PyObject *m, *d, *r, *bases;
+    PyObject *m, *r, *bases;
     unsigned long libver;
     unsigned int major, minor, fix, patch, status;
     PySocketModule_APIObject *socket_api;
@@ -5629,7 +5629,6 @@ PyInit__ssl(void)
     m = PyModule_Create(&_sslmodule);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
 
     /* Load _socket module and its C API */
     socket_api = PySocketModule_ImportModuleAndAPI();
@@ -5691,25 +5690,25 @@ PyInit__ssl(void)
         || PySSLSyscallErrorObject == NULL
         || PySSLEOFErrorObject == NULL)
         return NULL;
-    if (PyDict_SetItemString(d, "SSLError", PySSLErrorObject) != 0
-        || PyDict_SetItemString(d, "SSLCertVerificationError",
+    if (PyObject_SetAttrString(m, "SSLError", PySSLErrorObject) != 0
+        || PyObject_SetAttrString(m, "SSLCertVerificationError",
                                 PySSLCertVerificationErrorObject) != 0
-        || PyDict_SetItemString(d, "SSLZeroReturnError", PySSLZeroReturnErrorObject) != 0
-        || PyDict_SetItemString(d, "SSLWantReadError", PySSLWantReadErrorObject) != 0
-        || PyDict_SetItemString(d, "SSLWantWriteError", PySSLWantWriteErrorObject) != 0
-        || PyDict_SetItemString(d, "SSLSyscallError", PySSLSyscallErrorObject) != 0
-        || PyDict_SetItemString(d, "SSLEOFError", PySSLEOFErrorObject) != 0)
+        || PyObject_SetAttrString(m, "SSLZeroReturnError", PySSLZeroReturnErrorObject) != 0
+        || PyObject_SetAttrString(m, "SSLWantReadError", PySSLWantReadErrorObject) != 0
+        || PyObject_SetAttrString(m, "SSLWantWriteError", PySSLWantWriteErrorObject) != 0
+        || PyObject_SetAttrString(m, "SSLSyscallError", PySSLSyscallErrorObject) != 0
+        || PyObject_SetAttrString(m, "SSLEOFError", PySSLEOFErrorObject) != 0)
         return NULL;
-    if (PyDict_SetItemString(d, "_SSLContext",
+    if (PyObject_SetAttrString(m, "_SSLContext",
                              (PyObject *)&PySSLContext_Type) != 0)
         return NULL;
-    if (PyDict_SetItemString(d, "_SSLSocket",
+    if (PyObject_SetAttrString(m, "_SSLSocket",
                              (PyObject *)&PySSLSocket_Type) != 0)
         return NULL;
-    if (PyDict_SetItemString(d, "MemoryBIO",
+    if (PyObject_SetAttrString(m, "MemoryBIO",
                              (PyObject *)&PySSLMemoryBIO_Type) != 0)
         return NULL;
-    if (PyDict_SetItemString(d, "SSLSession",
+    if (PyObject_SetAttrString(m, "SSLSession",
                              (PyObject *)&PySSLSession_Type) != 0)
         return NULL;
 

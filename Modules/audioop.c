@@ -1917,15 +1917,12 @@ static struct PyModuleDef audioopmodule = {
 PyMODINIT_FUNC
 PyInit_audioop(void)
 {
-    PyObject *m, *d;
+    PyObject *m;
     m = PyModule_Create(&audioopmodule);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
-    if (d == NULL)
-        return NULL;
     AudioopError = PyErr_NewException("audioop.error", NULL, NULL);
     if (AudioopError != NULL)
-         PyDict_SetItemString(d,"error",AudioopError);
+         PyObject_SetAttrString(m, "error", AudioopError);
     return m;
 }

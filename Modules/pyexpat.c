@@ -1639,7 +1639,7 @@ static struct PyModuleDef pyexpatmodule = {
 PyMODINIT_FUNC
 MODULE_INITFUNC(void)
 {
-    PyObject *m, *d;
+    PyObject *m;
     PyObject *errmod_name = PyUnicode_FromString(MODULE_NAME ".errors");
     PyObject *errors_module;
     PyObject *modelmod_name;
@@ -1693,12 +1693,7 @@ MODULE_INITFUNC(void)
     */
     PyModule_AddStringConstant(m, "native_encoding", "UTF-8");
 
-    d = PyModule_GetDict(m);
-    if (d == NULL) {
-        Py_DECREF(m);
-        return NULL;
-    }
-    errors_module = PyDict_GetItemRef(d, errmod_name);
+    errors_module = PyObject_GetAttr(m, errmod_name);
     if (errors_module == NULL) {
         errors_module = PyModule_New(MODULE_NAME ".errors");
         if (errors_module != NULL) {
@@ -1710,7 +1705,7 @@ MODULE_INITFUNC(void)
         Py_DECREF(errors_module);
     }
     Py_DECREF(errmod_name);
-    model_module = PyDict_GetItemRef(d, modelmod_name);
+    model_module = PyObject_GetAttr(m, modelmod_name);
     if (model_module == NULL) {
         model_module = PyModule_New(MODULE_NAME ".model");
         if (model_module != NULL) {

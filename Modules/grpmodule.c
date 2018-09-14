@@ -242,13 +242,12 @@ PyInit_grp(void)
     m = PyModule_Create(&grpmodule);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
     if (!initialized) {
         if (PyStructSequence_InitType2(&StructGrpType,
                                        &struct_group_type_desc) < 0)
             return NULL;
     }
-    if (PyDict_SetItemString(d, "struct_group",
+    if (PyObject_SetAttrString(m, "struct_group",
                              (PyObject *)&StructGrpType) < 0)
         return NULL;
     initialized = 1;
