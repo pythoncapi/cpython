@@ -628,13 +628,12 @@ static struct PyModuleDef _curses_panelmodule = {
 PyMODINIT_FUNC
 PyInit__curses_panel(void)
 {
-    PyObject *m, *d, *v;
+    PyObject *m, *v;
 
     /* Create the module and add the functions */
     m = PyModule_Create(&_curses_panelmodule);
     if (m == NULL)
         goto fail;
-    d = PyModule_GetDict(m);
 
     /* Initialize object type */
     v = PyType_FromSpec(&PyCursesPanel_Type_spec);
@@ -649,16 +648,16 @@ PyInit__curses_panel(void)
 
     /* For exception _curses_panel.error */
     _curses_panelstate(m)->PyCursesError = PyErr_NewException("_curses_panel.error", NULL, NULL);
-    PyDict_SetItemString(d, "error", _curses_panelstate(m)->PyCursesError);
+    PyObject_SetAttrString(m, "error", _curses_panelstate(m)->PyCursesError);
 
     /* Make the version available */
     v = PyUnicode_FromString(PyCursesVersion);
-    PyDict_SetItemString(d, "version", v);
-    PyDict_SetItemString(d, "__version__", v);
+    PyObject_SetAttrString(m, "version", v);
+    PyObject_SetAttrString(m, "__version__", v);
     Py_DECREF(v);
 
     Py_INCREF(_curses_panelstate(m)->PyCursesPanel_Type);
-    PyModule_AddObject(m, "panel", (PyObject *)_curses_panelstate(m)->PyCursesPanel_Type);
+    PyObject_SetAttrString(m, "panel", (PyObject *)_curses_panelstate(m)->PyCursesPanel_Type);
     return m;
   fail:
     Py_XDECREF(m);

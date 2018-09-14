@@ -326,14 +326,8 @@ static FlagRuntimeInfo win_runtime_flags[] = {
 static void
 remove_unusable_flags(PyObject *m)
 {
-    PyObject *dict;
     OSVERSIONINFOEX info;
     DWORDLONG dwlConditionMask;
-
-    dict = PyModule_GetDict(m);
-    if (dict == NULL) {
-        return;
-    }
 
     /* set to Windows 10, except BuildNumber. */
     memset(&info, 0, sizeof(info));
@@ -358,13 +352,13 @@ remove_unusable_flags(PyObject *m)
             break;
         }
         else {
-            PyObject *flag = PyDict_GetItemRefString(
-                dict,
+            PyObject *flag = PyObject_GetAttrString(
+                m,
                 win_runtime_flags[i].flag_name);
             if (flag != NULL) {
                 Py_DECREF(flag);
-                PyDict_DelItemString(
-                    dict,
+                PyObject_DelAttrString(
+                    m,
                     win_runtime_flags[i].flag_name);
             }
         }

@@ -486,24 +486,23 @@ static struct PyModuleDef _dbmmodule = {
 
 PyMODINIT_FUNC
 PyInit__dbm(void) {
-    PyObject *m, *d, *s;
+    PyObject *m, *s;
 
     if (PyType_Ready(&Dbmtype) < 0)
         return NULL;
     m = PyModule_Create(&_dbmmodule);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
     if (DbmError == NULL)
         DbmError = PyErr_NewException("_dbm.error",
                                       PyExc_OSError, NULL);
     s = PyUnicode_FromString(which_dbm);
     if (s != NULL) {
-        PyDict_SetItemString(d, "library", s);
+        PyObject_SetAttrString(m, "library", s);
         Py_DECREF(s);
     }
     if (DbmError != NULL)
-        PyDict_SetItemString(d, "error", DbmError);
+        PyObject_SetAttrString(m, "error", DbmError);
     if (PyErr_Occurred()) {
         Py_DECREF(m);
         m = NULL;

@@ -20,7 +20,9 @@ PyAPI_FUNC(PyObject *) PyModule_NewObject(
 PyAPI_FUNC(PyObject *) PyModule_New(
     const char *name            /* UTF-8 encoded string */
     );
+#ifndef Py_NEWCAPI
 PyAPI_FUNC(PyObject *) PyModule_GetDict(PyObject *);
+#endif
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
 PyAPI_FUNC(PyObject *) PyModule_GetNameObject(PyObject *);
 #endif

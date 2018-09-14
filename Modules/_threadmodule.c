@@ -1350,7 +1350,7 @@ static struct PyModuleDef threadmodule = {
 PyMODINIT_FUNC
 PyInit__thread(void)
 {
-    PyObject *m, *d, *v;
+    PyObject *m, *v;
     double time_max;
     double timeout_max;
     PyInterpreterState *interp = _PyInterpreterState_Get();
@@ -1383,14 +1383,13 @@ PyInit__thread(void)
         return NULL;
 
     /* Add a symbolic constant */
-    d = PyModule_GetDict(m);
     ThreadError = PyExc_RuntimeError;
     Py_INCREF(ThreadError);
 
-    PyDict_SetItemString(d, "error", ThreadError);
+    PyObject_SetAttrString(m, "error", ThreadError);
     Locktype.tp_doc = lock_doc;
     Py_INCREF(&Locktype);
-    PyDict_SetItemString(d, "LockType", (PyObject *)&Locktype);
+    PyObject_SetAttrString(m, "LockType", (PyObject *)&Locktype);
 
     Py_INCREF(&RLocktype);
     if (PyModule_AddObject(m, "RLock", (PyObject *)&RLocktype) < 0)

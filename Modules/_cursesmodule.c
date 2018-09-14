@@ -3071,8 +3071,6 @@ _curses_init_pair_impl(PyObject *module, short pair_number, short fg,
     return PyCursesCheckERR(init_pair(pair_number, fg, bg), "init_pair");
 }
 
-static PyObject *ModDict;
-
 /*[clinic input]
 _curses.initscr
 
@@ -3107,7 +3105,7 @@ _curses_initscr_impl(PyObject *module)
 #define SetDictInt(string,ch)                                           \
     do {                                                                \
         PyObject *o = PyLong_FromLong((long) (ch));                     \
-        if (o && PyDict_SetItemString(ModDict, string, o) == 0)     {   \
+        if (o && PyObject_SetAttrString(module, string, o) == 0)     {   \
             Py_DECREF(o);                                               \
         }                                                               \
     } while (0)
@@ -3697,7 +3695,7 @@ _curses_qiflush_impl(PyObject *module, int flag)
  * and _curses.COLS */
 #if defined(HAVE_CURSES_RESIZETERM) || defined(HAVE_CURSES_RESIZE_TERM)
 static int
-update_lines_cols(void)
+update_lines_cols(PyObject *module)
 {
     PyObject *o;
     PyObject *m = PyImport_ImportModuleNoBlock("curses");
@@ -3718,7 +3716,7 @@ update_lines_cols(void)
         return 0;
     }
     /* PyId_LINES.object will be initialized here. */
-    if (PyDict_SetItem(ModDict, PyId_LINES.object, o)) {
+    if (PyObject_SetAttrString(module, PyId_LINES.object, o)) {
         Py_DECREF(m);
         Py_DECREF(o);
         return 0;
@@ -3734,7 +3732,7 @@ update_lines_cols(void)
         Py_DECREF(o);
         return 0;
     }
-    if (PyDict_SetItem(ModDict, PyId_COLS.object, o)) {
+    if (PyObject_SetAttrString(module, PyId_COLS.object, o)) {
         Py_DECREF(m);
         Py_DECREF(o);
         return 0;
@@ -3753,7 +3751,7 @@ static int
 _curses_update_lines_cols_impl(PyObject *module)
 /*[clinic end generated code: output=0345e7f072ea711a input=3a87760f7d5197f0]*/
 {
-  return update_lines_cols();
+  return update_lines_cols(module);
 }
 
 #endif
@@ -3837,7 +3835,7 @@ _curses_resizeterm_impl(PyObject *module, int nlines, int ncols)
     result = PyCursesCheckERR(resizeterm(nlines, ncols), "resizeterm");
     if (!result)
         return NULL;
-    if (!update_lines_cols())
+    if (!update_lines_cols(module))
         return NULL;
     return result;
 }
@@ -3874,7 +3872,7 @@ _curses_resize_term_impl(PyObject *module, int nlines, int ncols)
     result = PyCursesCheckERR(resize_term(nlines, ncols), "resize_term");
     if (!result)
         return NULL;
-    if (!update_lines_cols())
+    if (!update_lines_cols(module))
         return NULL;
     return result;
 }
@@ -3946,12 +3944,12 @@ _curses_start_color_impl(PyObject *module)
         c = PyLong_FromLong((long) COLORS);
         if (c == NULL)
             return NULL;
-        PyDict_SetItemString(ModDict, "COLORS", c);
+        PyObject_SetAttrString(module, "COLORS", c);
         Py_DECREF(c);
         cp = PyLong_FromLong((long) COLOR_PAIRS);
         if (cp == NULL)
             return NULL;
-        PyDict_SetItemString(ModDict, "COLOR_PAIRS", cp);
+        PyObject_SetAttrString(module, "COLOR_PAIRS", cp);
         Py_DECREF(cp);
         Py_RETURN_NONE;
     } else {
@@ -4387,7 +4385,7 @@ static struct PyModuleDef _cursesmodule = {
 PyMODINIT_FUNC
 PyInit__curses(void)
 {
-    PyObject *m, *d, *v, *c_api_object;
+    PyObject *m, *v, *c_api_object;
     static void *PyCurses_API[PyCurses_API_pointers];
 
     /* Initialize object type */
@@ -4406,10 +4404,6 @@ PyInit__curses(void)
         return NULL;
 
     /* Add some symbolic constants to the module */
-    d = PyModule_GetDict(m);
-    if (d == NULL)
-        return NULL;
-    ModDict = d; /* For PyCurses_InitScr to use later */
 
     /* Add a capsule for the C API */
     c_api_object = PyCapsule_New(PyCurses_API, PyCurses_CAPSULE_NAME, NULL);

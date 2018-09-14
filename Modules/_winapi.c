@@ -1741,12 +1741,11 @@ static struct PyModuleDef winapi_module = {
 };
 
 #define WINAPI_CONSTANT(fmt, con) \
-    PyDict_SetItemString(d, #con, Py_BuildValue(fmt, con))
+    PyObject_SetAttrString(m, #con, Py_BuildValue(fmt, con))
 
 PyMODINIT_FUNC
 PyInit__winapi(void)
 {
-    PyObject *d;
     PyObject *m;
 
     if (PyType_Ready(&OverlappedType) < 0)
@@ -1755,9 +1754,8 @@ PyInit__winapi(void)
     m = PyModule_Create(&winapi_module);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
 
-    PyDict_SetItemString(d, "Overlapped", (PyObject *) &OverlappedType);
+    PyObject_SetAttrString(m, "Overlapped", (PyObject *) &OverlappedType);
 
     /* constants */
     WINAPI_CONSTANT(F_DWORD, CREATE_NEW_CONSOLE);

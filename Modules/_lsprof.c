@@ -863,14 +863,13 @@ static struct PyModuleDef _lsprofmodule = {
 PyMODINIT_FUNC
 PyInit__lsprof(void)
 {
-    PyObject *module, *d;
+    PyObject *module;
     module = PyModule_Create(&_lsprofmodule);
     if (module == NULL)
         return NULL;
-    d = PyModule_GetDict(module);
     if (PyType_Ready(&PyProfiler_Type) < 0)
         return NULL;
-    PyDict_SetItemString(d, "Profiler", (PyObject *)&PyProfiler_Type);
+    PyObject_SetAttrString(module, "Profiler", (PyObject *)&PyProfiler_Type);
 
     if (!initialized) {
         if (PyStructSequence_InitType2(&StatsEntryType,

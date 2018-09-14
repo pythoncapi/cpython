@@ -456,13 +456,12 @@ static struct PyModuleDef nismodule = {
 PyMODINIT_FUNC
 PyInit_nis(void)
 {
-    PyObject *m, *d;
+    PyObject *m;
     m = PyModule_Create(&nismodule);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
     NisError = PyErr_NewException("nis.error", NULL, NULL);
     if (NisError != NULL)
-        PyDict_SetItemString(d, "error", NisError);
+        PyObject_SetAttrString(m, "error", NisError);
     return m;
 }

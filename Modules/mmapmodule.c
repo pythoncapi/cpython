@@ -1394,10 +1394,10 @@ new_mmap_object(PyTypeObject *type, PyObject *args, PyObject *kwdict)
 #endif /* MS_WINDOWS */
 
 static void
-setint(PyObject *d, const char *name, long value)
+setint(PyObject *m, const char *name, long value)
 {
     PyObject *o = PyLong_FromLong(value);
-    if (o && PyDict_SetItemString(d, name, o) == 0) {
+    if (o && PyObject_SetAttrString(m, name, o) == 0) {
         Py_DECREF(o);
     }
 }
@@ -1418,7 +1418,7 @@ static struct PyModuleDef mmapmodule = {
 PyMODINIT_FUNC
 PyInit_mmap(void)
 {
-    PyObject *dict, *module;
+    PyObject *module;
 
     if (PyType_Ready(&mmap_object_type) < 0)
         return NULL;
@@ -1426,45 +1426,42 @@ PyInit_mmap(void)
     module = PyModule_Create(&mmapmodule);
     if (module == NULL)
         return NULL;
-    dict = PyModule_GetDict(module);
-    if (!dict)
-        return NULL;
-    PyDict_SetItemString(dict, "error", PyExc_OSError);
-    PyDict_SetItemString(dict, "mmap", (PyObject*) &mmap_object_type);
+    PyObject_SetAttrString(module, "error", PyExc_OSError);
+    PyObject_SetAttrString(module, "mmap", (PyObject*) &mmap_object_type);
 #ifdef PROT_EXEC
-    setint(dict, "PROT_EXEC", PROT_EXEC);
+    setint(module, "PROT_EXEC", PROT_EXEC);
 #endif
 #ifdef PROT_READ
-    setint(dict, "PROT_READ", PROT_READ);
+    setint(module, "PROT_READ", PROT_READ);
 #endif
 #ifdef PROT_WRITE
-    setint(dict, "PROT_WRITE", PROT_WRITE);
+    setint(module, "PROT_WRITE", PROT_WRITE);
 #endif
 
 #ifdef MAP_SHARED
-    setint(dict, "MAP_SHARED", MAP_SHARED);
+    setint(module, "MAP_SHARED", MAP_SHARED);
 #endif
 #ifdef MAP_PRIVATE
-    setint(dict, "MAP_PRIVATE", MAP_PRIVATE);
+    setint(module, "MAP_PRIVATE", MAP_PRIVATE);
 #endif
 #ifdef MAP_DENYWRITE
-    setint(dict, "MAP_DENYWRITE", MAP_DENYWRITE);
+    setint(module, "MAP_DENYWRITE", MAP_DENYWRITE);
 #endif
 #ifdef MAP_EXECUTABLE
-    setint(dict, "MAP_EXECUTABLE", MAP_EXECUTABLE);
+    setint(module, "MAP_EXECUTABLE", MAP_EXECUTABLE);
 #endif
 #ifdef MAP_ANONYMOUS
-    setint(dict, "MAP_ANON", MAP_ANONYMOUS);
-    setint(dict, "MAP_ANONYMOUS", MAP_ANONYMOUS);
+    setint(module, "MAP_ANON", MAP_ANONYMOUS);
+    setint(module, "MAP_ANONYMOUS", MAP_ANONYMOUS);
 #endif
 
-    setint(dict, "PAGESIZE", (long)my_getpagesize());
+    setint(module, "PAGESIZE", (long)my_getpagesize());
 
-    setint(dict, "ALLOCATIONGRANULARITY", (long)my_getallocationgranularity());
+    setint(module, "ALLOCATIONGRANULARITY", (long)my_getallocationgranularity());
 
-    setint(dict, "ACCESS_DEFAULT", ACCESS_DEFAULT);
-    setint(dict, "ACCESS_READ", ACCESS_READ);
-    setint(dict, "ACCESS_WRITE", ACCESS_WRITE);
-    setint(dict, "ACCESS_COPY", ACCESS_COPY);
+    setint(module, "ACCESS_DEFAULT", ACCESS_DEFAULT);
+    setint(module, "ACCESS_READ", ACCESS_READ);
+    setint(module, "ACCESS_WRITE", ACCESS_WRITE);
+    setint(module, "ACCESS_COPY", ACCESS_COPY);
     return module;
 }

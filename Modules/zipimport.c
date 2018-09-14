@@ -520,7 +520,7 @@ static PyObject *
 zipimport_zipimporter_load_module_impl(ZipImporter *self, PyObject *fullname)
 /*[clinic end generated code: output=7303cebf88d47953 input=c236e2e8621f04ef]*/
 {
-    PyObject *code = NULL, *mod, *dict;
+    PyObject *code = NULL, *mod;
     PyObject *modpath = NULL;
     int ispackage;
 
@@ -534,10 +534,9 @@ zipimport_zipimporter_load_module_impl(ZipImporter *self, PyObject *fullname)
     mod = PyImport_AddModuleObject(fullname);
     if (mod == NULL)
         goto error;
-    dict = PyModule_GetDict(mod);
 
     /* mod.__loader__ = self */
-    if (PyDict_SetItemString(dict, "__loader__", (PyObject *)self) != 0)
+    if (PyObject_SetAttrString(mod, "__loader__", (PyObject *)self) != 0)
         goto error;
 
     if (ispackage) {
@@ -560,7 +559,7 @@ zipimport_zipimporter_load_module_impl(ZipImporter *self, PyObject *fullname)
         pkgpath = Py_BuildValue("[N]", fullpath);
         if (pkgpath == NULL)
             goto error;
-        err = PyDict_SetItemString(dict, "__path__", pkgpath);
+        err = PyObject_SetAttrString(mod, "__path__", pkgpath);
         Py_DECREF(pkgpath);
         if (err != 0)
             goto error;

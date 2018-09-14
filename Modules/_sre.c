@@ -2782,7 +2782,6 @@ static struct PyModuleDef sremodule = {
 PyMODINIT_FUNC PyInit__sre(void)
 {
     PyObject* m;
-    PyObject* d;
     PyObject* x;
 
     /* Patch object types */
@@ -2793,35 +2792,34 @@ PyMODINIT_FUNC PyInit__sre(void)
     m = PyModule_Create(&sremodule);
     if (m == NULL)
         return NULL;
-    d = PyModule_GetDict(m);
 
     x = PyLong_FromLong(SRE_MAGIC);
     if (x) {
-        PyDict_SetItemString(d, "MAGIC", x);
+        PyObject_SetAttrString(m, "MAGIC", x);
         Py_DECREF(x);
     }
 
     x = PyLong_FromLong(sizeof(SRE_CODE));
     if (x) {
-        PyDict_SetItemString(d, "CODESIZE", x);
+        PyObject_SetAttrString(m, "CODESIZE", x);
         Py_DECREF(x);
     }
 
     x = PyLong_FromUnsignedLong(SRE_MAXREPEAT);
     if (x) {
-        PyDict_SetItemString(d, "MAXREPEAT", x);
+        PyObject_SetAttrString(m, "MAXREPEAT", x);
         Py_DECREF(x);
     }
 
     x = PyLong_FromUnsignedLong(SRE_MAXGROUPS);
     if (x) {
-        PyDict_SetItemString(d, "MAXGROUPS", x);
+        PyObject_SetAttrString(m, "MAXGROUPS", x);
         Py_DECREF(x);
     }
 
     x = PyUnicode_FromString(copyright);
     if (x) {
-        PyDict_SetItemString(d, "copyright", x);
+        PyObject_SetAttrString(m, "copyright", x);
         Py_DECREF(x);
     }
     return m;

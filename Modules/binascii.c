@@ -1557,19 +1557,17 @@ static struct PyModuleDef binasciimodule = {
 PyMODINIT_FUNC
 PyInit_binascii(void)
 {
-    PyObject *m, *d;
+    PyObject *m;
 
     /* Create the module and add the functions */
     m = PyModule_Create(&binasciimodule);
     if (m == NULL)
         return NULL;
 
-    d = PyModule_GetDict(m);
-
     Error = PyErr_NewException("binascii.Error", PyExc_ValueError, NULL);
-    PyDict_SetItemString(d, "Error", Error);
+    PyObject_SetAttrString(m, "Error", Error);
     Incomplete = PyErr_NewException("binascii.Incomplete", NULL, NULL);
-    PyDict_SetItemString(d, "Incomplete", Incomplete);
+    PyObject_SetAttrString(m, "Incomplete", Incomplete);
     if (PyErr_Occurred()) {
         Py_DECREF(m);
         m = NULL;

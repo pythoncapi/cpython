@@ -1275,7 +1275,7 @@ static struct PyModuleDef signalmodule = {
 PyMODINIT_FUNC
 PyInit__signal(void)
 {
-    PyObject *m, *d, *x;
+    PyObject *m, *x;
     int i;
 
     main_thread = PyThread_get_thread_ident();
@@ -1297,18 +1297,16 @@ PyInit__signal(void)
 #endif
 
     /* Add some symbolic constants to the module */
-    d = PyModule_GetDict(m);
-
     x = DefaultHandler = PyLong_FromVoidPtr((void *)SIG_DFL);
-    if (!x || PyDict_SetItemString(d, "SIG_DFL", x) < 0)
+    if (!x || PyObject_SetAttrString(m, "SIG_DFL", x) < 0)
         goto finally;
 
     x = IgnoreHandler = PyLong_FromVoidPtr((void *)SIG_IGN);
-    if (!x || PyDict_SetItemString(d, "SIG_IGN", x) < 0)
+    if (!x || PyObject_SetAttrString(m, "SIG_IGN", x) < 0)
         goto finally;
 
     x = PyLong_FromLong((long)NSIG);
-    if (!x || PyDict_SetItemString(d, "NSIG", x) < 0)
+    if (!x || PyObject_SetAttrString(m, "NSIG", x) < 0)
         goto finally;
     Py_DECREF(x);
 
@@ -1325,7 +1323,7 @@ PyInit__signal(void)
          goto finally;
 #endif
 
-    x = IntHandler = PyDict_GetItemRefString(d, "default_int_handler");
+    x = IntHandler = PyObject_GetAttrString(m, "default_int_handler");
     if (!x)
         goto finally;
 

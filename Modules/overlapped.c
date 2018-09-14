@@ -1469,12 +1469,12 @@ static struct PyModuleDef overlapped_module = {
 };
 
 #define WINAPI_CONSTANT(fmt, con) \
-    PyDict_SetItemString(d, #con, Py_BuildValue(fmt, con))
+    PyObject_SetAttrString(m, #con, Py_BuildValue(fmt, con))
 
 PyMODINIT_FUNC
 PyInit__overlapped(void)
 {
-    PyObject *m, *d;
+    PyObject *m;
 
     /* Ensure WSAStartup() called before initializing function pointers */
     m = PyImport_ImportModule("_socket");
@@ -1491,8 +1491,6 @@ PyInit__overlapped(void)
     m = PyModule_Create(&overlapped_module);
     if (PyModule_AddObject(m, "Overlapped", (PyObject *)&OverlappedType) < 0)
         return NULL;
-
-    d = PyModule_GetDict(m);
 
     WINAPI_CONSTANT(F_DWORD,  ERROR_IO_PENDING);
     WINAPI_CONSTANT(F_DWORD,  ERROR_NETNAME_DELETED);
